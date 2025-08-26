@@ -68,10 +68,23 @@ solution "xatlas"
 	end
 	platforms { "x86_64", "x86" }
 	startproject "viewer"
-	filter "platforms:x86"
-		architecture "x86"
-	filter "platforms:x86_64"
-		architecture "x86_64"
+	
+	filter "system:macosx"
+		architecture "arm64"
+		platforms { "arm64" }
+		defines { "BGFX_CONFIG_RENDERER_VULKAN=0", "BGFX_CONFIG_RENDERER_OPENGL=0", "BGFX_CONFIG_RENDERER_METAL=1" }
+	
+	filter "system:windows"
+		filter "platforms:x86"
+			architecture "x86"
+		filter "platforms:x86_64"
+			architecture "x86_64"
+	
+	filter "system:linux"
+		filter "platforms:x86"
+			architecture "x86"
+		filter "platforms:x86_64"
+			architecture "x86_64"
 	filter "configurations:Debug*"
 		defines { "_DEBUG" }
 		optimize "Debug"
@@ -140,6 +153,8 @@ project "test"
 		files "source/xatlas.natvis"
 	filter "system:linux"
 		links { "pthread" }
+	filter "system:macosx"
+		links { "pthread" }
 
 project "viewer"
 	kind "ConsoleApp"
@@ -171,6 +186,12 @@ project "viewer"
 		links { "bcrypt", "gdi32", "ole32", "psapi", "uuid"}
 	filter "system:linux"
 		links { "dl", "GL", "gtk-3", "gobject-2.0", "glib-2.0", "pthread", "X11", "Xcursor", "Xinerama", "Xrandr" }
+	filter "system:macosx"
+		architecture "arm64"
+		platforms { "arm64" }
+		links { "pthread" }
+		linkoptions { "-framework Cocoa", "-framework CoreVideo", "-framework IOKit", "-framework Metal", "-framework MetalKit", "-framework QuartzCore" }
+		defines { "BGFX_CONFIG_RENDERER_VULKAN=0", "BGFX_CONFIG_RENDERER_OPENGL=0", "BGFX_CONFIG_RENDERER_METAL=1", "GLFW_EXPOSE_NATIVE_COCOA" }
 	filter "action:vs*"
 		files "source/xatlas.natvis"
 		includedirs { path.join(BX_DIR, "include/compat/msvc") }
@@ -195,6 +216,8 @@ project "example"
 		files "source/xatlas.natvis"
 	filter "system:linux"
 		links { "pthread" }
+	filter "system:macosx"
+		links { "pthread" }
 		
 project "example_c99"
 	kind "ConsoleApp"
@@ -206,6 +229,8 @@ project "example_c99"
 	includedirs { XATLAS_DIR, THIRDPARTY_DIR }
 	links { "objzero", "xatlas" }
 	filter "system:linux"
+		links { "m", "pthread" }
+	filter "system:macosx"
 		links { "m", "pthread" }
 		
 project "example_uvmesh"
@@ -222,6 +247,8 @@ project "example_uvmesh"
 	filter "action:vs*"
 		files "source/xatlas.natvis"
 	filter "system:linux"
+		links { "pthread" }
+	filter "system:macosx"
 		links { "pthread" }
 
 group "thirdparty"
@@ -268,7 +295,32 @@ project "bgfx"
 		}
 	filter { "system:windows", "action:gmake" }
 		includedirs { path.join(BX_DIR, "include/compat/mingw") }
-		
+	filter "system:macosx"
+		defines { "BGFX_CONFIG_RENDERER_VULKAN=0", "BGFX_CONFIG_RENDERER_OPENGL=0", "BGFX_CONFIG_RENDERER_METAL=1" }
+		excludes
+		{
+			path.join(BGFX_DIR, "src/amalgamated.cpp"),
+			path.join(BGFX_DIR, "src/glcontext_glx.cpp"),
+			path.join(BGFX_DIR, "src/glcontext_egl.cpp"),
+			path.join(BGFX_DIR, "src/glcontext_wgl.cpp"),
+			path.join(BGFX_DIR, "src/glcontext_html5.cpp"),
+			path.join(BGFX_DIR, "src/renderer_gl.cpp"),
+			path.join(BGFX_DIR, "src/renderer_gl.h"),
+			path.join(BGFX_DIR, "src/glcontext.h"),
+			path.join(BGFX_DIR, "src/glcontext_egl.h"),
+			path.join(BGFX_DIR, "src/glcontext_glx.h"),
+			path.join(BGFX_DIR, "src/glcontext_nsgl.h"),
+			path.join(BGFX_DIR, "src/glcontext_wgl.h"),
+			path.join(BGFX_DIR, "src/glimports.h"),
+			path.join(BGFX_DIR, "src/glimports.cpp"),
+			path.join(BGFX_DIR, "src/renderer_vk.cpp")
+		}
+		files
+		{
+			path.join(BGFX_DIR, "src/renderer_mtl.mm"),
+			path.join(BGFX_DIR, "src/renderer_mtl.h")
+		}
+
 project "bimg"
 	kind "StaticLib"
 	language "C++"
@@ -327,6 +379,8 @@ project "bx"
 		includedirs { path.join(BX_DIR, "include/compat/msvc") }
 	filter { "system:windows", "action:gmake" }
 		includedirs { path.join(BX_DIR, "include/compat/mingw") }
+	filter "system:macosx"
+		includedirs { path.join(BX_DIR, "include/compat/osx") }
 
 project "cgltf"
 	kind "StaticLib"
@@ -384,6 +438,22 @@ project "glfw"
 			path.join(GLFW_DIR, "src/x11*.c"),
 			path.join(GLFW_DIR, "src/xkb*.c")
 		}
+	filter "system:macosx"
+		defines "_GLFW_COCOA"
+		files
+		{
+			path.join(GLFW_DIR, "src/cocoa_init.m"),
+			path.join(GLFW_DIR, "src/cocoa_joystick.m"),
+			path.join(GLFW_DIR, "src/cocoa_monitor.m"),
+			path.join(GLFW_DIR, "src/cocoa_time.c"),
+			path.join(GLFW_DIR, "src/cocoa_window.m"),
+			path.join(GLFW_DIR, "src/nsgl_context.m"),
+			path.join(GLFW_DIR, "src/posix_thread.c")
+		}
+		excludes
+		{
+			path.join(GLFW_DIR, "src/posix_time.c")
+		}
 	filter "action:vs*"
 		defines { "_CRT_SECURE_NO_WARNINGS" }
 	filter {}
@@ -422,6 +492,8 @@ project "nativefiledialog"
 	filter "system:linux"
 		files(path.join(NATIVEFILEDIALOG_DIR, "nfd_gtk.c"))
 		buildoptions(os.outputof("pkg-config --cflags gtk+-3.0"))
+	filter "system:macosx"
+		files(path.join(NATIVEFILEDIALOG_DIR, "nfd_cocoa.m"))
 	filter "action:vs*"
 		defines { "_CRT_SECURE_NO_WARNINGS" }
 	

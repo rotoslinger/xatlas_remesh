@@ -18,6 +18,8 @@ function compileShader(args)
 		command = path.join(BASE_PATH, "bin", "shaderc.exe")
 	elseif os.ishost("linux") then
 		command = path.join(BASE_PATH, "bin", "shaderc")
+	elseif os.ishost("macosx") then
+		command = path.join(BASE_PATH, "bin", "shaderc")
 	end
 	command = command .. string.format(" -i \"%s\" -f \"%s\" -o \"%s\" --varyingdef \"%s\" --type %s", args.includeDirs, args.inputFilename, args.outputFilename, args.varyingFilename, args.type)
 	if args.bin2c then
@@ -67,6 +69,8 @@ newaction
 		local renderers = nil
 		if os.ishost("windows") then
 			renderers = { "d3d11", "gl", "vk" }
+		elseif os.ishost("macosx") then
+			renderers = { "gl", "vk" }
 		else
 			renderers = { "gl", "vk" }
 		end

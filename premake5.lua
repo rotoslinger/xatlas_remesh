@@ -251,6 +251,24 @@ project "example_uvmesh"
 	filter "system:macosx"
 		links { "pthread" }
 
+project "xatlas_cli"
+	kind "ConsoleApp"
+	language "C++"
+	cppdialect "C++11"
+	exceptionhandling "Off"
+	rtti "Off"
+	warnings "Extra"
+	sanitizer()
+	files { path.join(EXAMPLES_DIR, "xatlas_cli.cpp") }
+	includedirs { XATLAS_DIR, THIRDPARTY_DIR }
+	links { "stb_image_write", "tiny_obj_loader", "xatlas_static" }
+	filter "action:vs*"
+		files "source/xatlas.natvis"
+	filter "system:linux"
+		links { "pthread" }
+	filter "system:macosx"
+		links { "pthread" }
+
 group "thirdparty"
 
 project "bgfx"
